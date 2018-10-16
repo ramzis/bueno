@@ -235,7 +235,10 @@
         public void RequestDraw(string playerName)
         {
             // Debug.LogFormat("[GAME] Player {0} drawing 1 card.", player.name);
-            room.GivePlayerCards(playerName, deck.Draw(1));
+            if(GetCurrentPlayerName() == playerName)
+                room.GivePlayerCards(playerName, deck.Draw(1));
+            else
+                Debug.LogWarningFormat("[GAME] Invalid draw request from player {0}", playerName);
         }
 
         public bool ValidateMove(Card bot, Card top)

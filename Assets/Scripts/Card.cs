@@ -162,10 +162,48 @@
             }
         }
 
+        public static bool operator ==(Card left, Card right)
+        {
+            // Review https://msdn.microsoft.com/en-US/library/ms173147%28v=vs.80%29.aspx
+            // If both are null, or both are same instance, return true.
+            if (ReferenceEquals(left, right))
+            {
+                return true;
+            }
+
+            // If one is null, but not both, return false.
+            if (((object)left == null) || ((object)right == null))
+            {
+                return false;
+            }
+
+            // Return true if the fields match:
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(Card left, Card right)
+        {
+            return !(left == right);
+        }
+
         public bool Equals(Card other)
         {
-            //return other.color == color && other.type == type;
-            return GetInstanceID() == other.GetInstanceID();
+            if(other == null)
+            {
+                return false;
+            }
+
+            return other.color == color && other.type == type;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as Card);
+        }
+
+        public override int GetHashCode()
+        {
+            return color.GetHashCode() ^ type.GetHashCode();
         }
 
     }

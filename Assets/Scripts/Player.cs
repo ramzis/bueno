@@ -12,7 +12,7 @@
         protected List<Card> hand;
         protected Game game;
         protected bool activeTurn;
-        [SerializeField] protected bool isAI;
+        [SerializeField] public bool isAI {get; protected set;}
 
         public static Player Create(string playerName, Game game, bool isAI) 
         {
@@ -50,11 +50,36 @@
 
         public bool HasCards(List<Card> cards)
         {
+            Dictionary<Card, int> handCardCount = new Dictionary<Card, int>();
+            foreach(Card c in hand) 
+            {
+                int count;
+                if(handCardCount.TryGetValue(c, out count)) 
+                {
+                    handCardCount[c] = count + 1;
+                }
+                else 
+                {
+                    handCardCount.Add(c, 1);
+                }
+            }
+
             foreach(Card c in cards)
             {
-                if(!hand.Contains(c))
+                int count;
+                if(handCardCount.TryGetValue(c, out count)) 
+                {
+                    if(count < 1)
+                        return false;
+                    else
+                        handCardCount[c] = count - 1;
+                }
+                else 
+                {
                     return false;
+                }
             }
+
             return true;
         }
 

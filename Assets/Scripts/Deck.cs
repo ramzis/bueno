@@ -5,6 +5,7 @@
 	using UnityEngine;
     using System.Linq;
 
+    // A data container for cards.
 	public class Deck : MonoBehaviour {
 
         [SerializeField] protected List<Card> draw;
@@ -150,14 +151,14 @@
             // If there is no deck
             if(draw == null)
             {
-                Debug.LogError("Deck is not available.");
+                Debug.LogError("[DECK] Deck is not available.");
                 return drawnCards;
             }
             
             // If there is no discard pile
             if (discard == null)
             {
-                Debug.LogError("Discard is not available.");
+                Debug.LogError("[DECK] Discard is not available.");
                 return drawnCards;
             }
 
@@ -167,12 +168,12 @@
                 // If it is not possible to merge discard to draw.
                 if ((discard.Count - 1 + draw.Count) < count)
                 {
-                    Debug.LogWarningFormat("Not enough cards to draw.");
+                    Debug.LogWarningFormat("[DECK] Not enough cards to draw.");
                     return drawnCards;
                 }
 
                 // Merge discard into draw and shuffle.
-                Debug.Log("Merging discard and draw piles.");
+                Debug.Log("[DECK] Merging discard and draw piles.");
                 draw.AddRange(discard.GetRange(0, discard.Count - 1));
                 discard.RemoveRange(0, discard.Count - 1);
                 ShuffleDraw();
