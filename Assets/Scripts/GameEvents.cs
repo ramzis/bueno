@@ -7,23 +7,31 @@
 
 	public class GameEvents : MonoBehaviour {
 
-		private delegate void PlayerCardEvent(Player p, Card c);
+		private delegate void PlayerCardEvent(string p, Card c);
 		private event PlayerCardEvent DrawCardEvent;
 		private event PlayerCardEvent DiscardCardEvent;
 		private Action<string> PlayerJoinEvent;
 
-		public void PlayerJoin(string name) 
+		public void PlayerJoin(string playerName) 
 		{
 			if(PlayerJoinEvent != null) 
             {
-                PlayerJoinEvent.Invoke(name);
+                PlayerJoinEvent.Invoke(playerName);
             }
 		}
 
-		public void DrawCard(Player player, Card card)
+		public void DrawCard(string playerName, Card card)
 		{
 			if(DrawCardEvent != null) 
-                DrawCardEvent.Invoke(player, card);
+                DrawCardEvent.Invoke(playerName, card);
+		}
+
+		public void DiscardCard(string playerName, Card card)
+		{
+			if(DiscardCardEvent != null)
+			{
+				DiscardCardEvent.Invoke(playerName, card);
+			}
 		}
 	}
 }

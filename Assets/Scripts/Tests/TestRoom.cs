@@ -20,7 +20,7 @@
 
 		private void InitPlayerList()
 		{
-			players = new List<Player>();
+			players = new List<IPlayer>();
 		}
 
 		[Test]
@@ -49,7 +49,7 @@
 		public void PlayersAreGivenOneCard()
 		{
 			Join("Aldona", null, true);
-			Player a = GetPlayer("Aldona");
+			IPlayer a = GetPlayer("Aldona");
 			Debug.Assert(a.GetCardCount() == 0);
 
 			Card c1 = Card.Create(Card.Type._0, Card.Color._1);
@@ -60,6 +60,5 @@
 			GivePlayerCards("Aldona", c2);
 			Debug.Assert(a.GetCardCount() == 2);
 		}
-
 	}
 }

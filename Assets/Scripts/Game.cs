@@ -21,11 +21,12 @@
         protected bool isMovingClockwise;
         protected int pendingCardsToDraw = 0;
         protected bool isNextPlayerSkipped = false;
+        protected bool didPlayerRequestDraw = false;
 
         protected virtual void Start()
         {
-            JoinGame("Tadas");
-            JoinGame("Aldona");
+            JoinGame("Tadas", false);
+            JoinGame("Aldona", true);
             playerNames = room.GetPlayerNames();
             deck.Reset();
             DealStartingHands();
@@ -47,7 +48,7 @@
         protected void DrawFirstCard()
         {
             List<Card> first = deck.Draw(1);
-            // TODO: resolve first card draw effects.
+            ResolveMoveEffects(first);
             deck.Discard(first);
         }
 
@@ -65,6 +66,9 @@
             {
                 // Debug.LogFormat("[GAME] Player {0} turn. ({1} Cards.)", players[currPlayerIdx].name, players[currPlayerIdx].hand.Count);
                 // Debug.LogFormat("[GAME] Current Card: {0}", GetCurrentCard());
+
+                // Reset single draw request
+                didPlayerRequestDraw = false;
 
                 // Draw pending cards
                 if (pendingCardsToDraw > 0)
@@ -178,7 +182,7 @@
         protected bool AttemptMove(string playerName, List<Card> cards)
         {
             // Ensure player has these cards
-            if(!room.CheckIfPlayerHasCards(playerName, cards)) 
+            if(!room.CheckIfPlayerHasCards(playerName, cards) || cards.Count < 1) 
             {
                 return false;
             }
@@ -206,6 +210,10 @@
             }
             cards.RemoveAt(0);
             deck.Discard(cards);
+            foreach(Card c in cards)
+            {
+                gameEvents.DiscardCard(playerName, c);
+            }
             room.RemovePlayerCards(playerName, cards);
             return true;
         }
@@ -227,16 +235,21 @@
             }
             else 
             {
-                Debug.LogWarningFormat("[GAME] Player {0} provided invalid move.", playerName);
-                RequestDraw(playerName);
+                Debug.LogWarningFormat("[GAME] Player {0} provided invalid or empty move.", playerName);
+                // If move was invalid but player already drew, don't draw again
+                if(!didPlayerRequestDraw) 
+                    RequestDraw(playerName);
             }
         }
 
         public void RequestDraw(string playerName)
         {
-            // Debug.LogFormat("[GAME] Player {0} drawing 1 card.", player.name);
-            if(GetCurrentPlayerName() == playerName)
+            if(GetCurrentPlayerName() == playerName && !didPlayerRequestDraw)
+            {
+                Debug.LogFormat("[GAME] Player {0} drawing 1 card.", playerName);
+                didPlayerRequestDraw = true;
                 room.GivePlayerCards(playerName, deck.Draw(1));
+            }
             else
                 Debug.LogWarningFormat("[GAME] Invalid draw request from player {0}", playerName);
         }
@@ -261,9 +274,9 @@
             return playerNames[currentPlayerIdx];
         }
 
-        public void JoinGame(string playerName) 
+        public void JoinGame(string playerName, bool isAI) 
         {
-            room.Join(playerName, this, true);
+            room.Join(playerName, this, isAI);
             gameEvents.PlayerJoin(name);
         }
     }

@@ -9,12 +9,12 @@
 	/// Basically an interface for the game to interact with players without directly touching their data.
 	public class Room : MonoBehaviour {
 		
-		[SerializeField] protected List<Player> players;
+		[SerializeField] protected List<IPlayer> players;
 
 		public void Join(string playerName, Game game, bool isAI)
         {
             if (players == null)
-                players = new List<Player>();
+                players = new List<IPlayer>();
             AddPlayer(playerName, game, isAI);
 			Debug.LogFormat("Player {0} joined", playerName);
         }
@@ -29,7 +29,7 @@
 
 		public void GivePlayerCards(string playerName, List<Card> cards)
 		{
-			Player player = GetPlayer(playerName);
+			IPlayer player = GetPlayer(playerName);
 			if(player != null) 
 			{
 				player.GiveCards(cards);
@@ -38,7 +38,7 @@
 
 		public void GivePlayerCards(string playerName, Card cards)
 		{
-			Player player = GetPlayer(playerName);
+			IPlayer player = GetPlayer(playerName);
 			if(player != null) 
 			{
 				player.GiveCards(cards);
@@ -52,7 +52,7 @@
 
 		public int GetPlayerCardCount(string playerName)
 		{
-			Player player = GetPlayer(playerName);
+			IPlayer player = GetPlayer(playerName);
 			if(player != null)
 			{
 				return player.GetCardCount();
@@ -65,7 +65,7 @@
 
 		public bool CheckIfPlayerHasCards(string playerName, List<Card> cards) 
 		{
-			Player player = GetPlayer(playerName);
+			IPlayer player = GetPlayer(playerName);
 			if(player != null) {
 				return player.HasCards(cards);
 			}
@@ -77,7 +77,7 @@
 
 		public void RemovePlayerCards(string playerName, List<Card> cards)
 		{
-			Player player = GetPlayer(playerName);
+			IPlayer player = GetPlayer(playerName);
 			if(player != null) 
 			{
 				player.RemoveCards(cards);
@@ -86,22 +86,22 @@
 
 		public void NotifyPlayerTurn(string playerName)
 		{
-			Player player = GetPlayer(playerName);
+			IPlayer player = GetPlayer(playerName);
 			if(player != null)
 			{
-				Debug.LogFormat("Notified {0} of turn through room", playerName);
+				//Debug.LogFormat("Notified {0} of turn through room", playerName);
 				player.NotifyTurn();
 			}			
 		}
 
-		protected Player GetPlayer(string playerName)
+		protected IPlayer GetPlayer(string playerName)
 		{
 			return players.Find(x => x.playerName == playerName);
 		}
 
 		protected void AddPlayer(string playerName, Game game, bool isAI)
 		{
-			players.Add(Player.Create(playerName, game, isAI));
+			players.Add(IPlayer.Create(playerName, game, isAI));
 		}
 
 		protected void RemovePlayer(string playerName) 
