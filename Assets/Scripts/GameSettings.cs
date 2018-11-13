@@ -12,6 +12,6 @@
         public int drawPlusTwoCardCount = 2;
         public float timePerTurn = 10;
         public float afterTurnDelay = 0;
-
+        public float cardDealDelay = 0.5f;
     }
 }

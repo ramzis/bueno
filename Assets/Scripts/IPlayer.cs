@@ -1,46 +1,53 @@
 ﻿namespace Tadget
 {
-	using System.Collections;
-	using System.Collections.Generic;
-	using UnityEngine;
+    using System.Collections;
+    using System.Collections.Generic;
+    using UnityEngine;
 
-	public abstract class IPlayer : ScriptableObject {
-		
-		[SerializeField] public string playerName {get; protected set;}
+    public abstract class IPlayer : ScriptableObject {
+        
+        [SerializeField] public string playerName {get; protected set;}
+        protected PlayerView playerView;
         protected List<Card> hand;
         protected Game game;
         protected bool activeTurn;
         [SerializeField] public bool isAI {get; protected set;}
+        [SerializeField] public bool isLocal {get; protected set;}
 
-        public static IPlayer Create(string playerName, Game game, bool isAI) 
+        public static IPlayer Create(string playerName, Game game, bool isAI, bool isLocal) 
         {
-			if(isAI)
-			{
-            	return ScriptableObject.CreateInstance<PlayerAI>().Init(playerName, game, isAI);
-			}
-			else
-			{
-            	return ScriptableObject.CreateInstance<PlayerHuman>().Init(playerName, game, isAI);
-			}
+            if(isAI)
+            {
+                return ScriptableObject.CreateInstance<PlayerAI>().Init(playerName, game, isAI, isLocal);
+            }
+            else
+            {
+                return ScriptableObject.CreateInstance<PlayerHuman>().Init(playerName, game, isAI, isLocal);
+            }
         }
 
-        private IPlayer Init(string playerName, Game game, bool isAI)
+        private IPlayer Init(string playerName, Game game, bool isAI, bool isLocal)
         {
             hand = new List<Card>();
             this.playerName = playerName;
             this.game = game;
             this.isAI = isAI;
+            this.isLocal = isLocal;
             return this;
         }
 
         public void NotifyTurn()
         {
+            if(activeTurn)
+            {
+                return;
+            }
             activeTurn = true;
-			MakeMove();
+            MakeMove();
             activeTurn = false;
         }
 
-		public abstract void MakeMove();
+        public abstract void MakeMove();
 
         public void GiveCards(List<Card> cards) 
         {
@@ -104,5 +111,5 @@
         {
             Debug.LogFormat("[{0}] UNO!", playerName);
         }
-	}
+    }
 }

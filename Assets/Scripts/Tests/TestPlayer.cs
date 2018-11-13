@@ -20,7 +20,7 @@
 		[Test]
 		public void PlayerIsCreated()
 		{
-			IPlayer p = IPlayer.Create("Aldona", null, true);
+			IPlayer p = IPlayer.Create("Aldona", null, true, true);
 			
 			Debug.Assert(p.playerName == "Aldona");
 			Debug.Assert(p.isAI == true);
@@ -29,7 +29,7 @@
 		[Test]
 		public void CardIsReceived()
 		{
-			IPlayer p = IPlayer.Create("Aldona", null, true);
+			IPlayer p = IPlayer.Create("Aldona", null, true, true);
 			Debug.Assert(p.GetCardCount() == 0);
 			
 			Card c1 = Card.Create(Card.Type._0, Card.Color._1);
@@ -41,7 +41,7 @@
 		[Test]
 		public void CardsAreReceived()
 		{
-			IPlayer p = IPlayer.Create("Aldona", null, true);
+			IPlayer p = IPlayer.Create("Aldona", null, true, true);
 			Debug.Assert(p.GetCardCount() == 0);
 			
 			Card c1 = Card.Create(Card.Type._0, Card.Color._1);
@@ -54,7 +54,7 @@
 		[Test]
 		public void HasCardsCheckIsCorrect()
 		{
-			IPlayer p = IPlayer.Create("Aldona", null, true);
+			IPlayer p = IPlayer.Create("Aldona", null, true, true);
 			
 			Card c1 = Card.Create(Card.Type._0, Card.Color._1);
 			Card c2 = Card.Create(Card.Type._0, Card.Color._1);
@@ -101,7 +101,7 @@
 		[Test]
 		public void PlayerRemovesCards()
 		{
-			IPlayer p = IPlayer.Create("Aldona", null, true);
+			IPlayer p = IPlayer.Create("Aldona", null, true, true);
 			
 			Card c1 = Card.Create(Card.Type._0, Card.Color._1);
 			Card c2 = Card.Create(Card.Type._0, Card.Color._2);
@@ -127,7 +127,7 @@
 		[Test]
 		public void CardCountCheckIsCorrect()
 		{
-			IPlayer p = IPlayer.Create("Aldona", null, true);
+			IPlayer p = IPlayer.Create("Aldona", null, true, true);
 
 			Card c1 = Card.Create(Card.Type._0, Card.Color._1);
 			Card c2 = Card.Create(Card.Type._0, Card.Color._2);

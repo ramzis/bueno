@@ -1,12 +1,12 @@
 ﻿namespace Tadget
 {
-	using System.Collections;
-	using System.Collections.Generic;
-	using UnityEngine;
+    using System.Collections;
+    using System.Collections.Generic;
+    using UnityEngine;
     using System.Linq;
 
     // A data container for cards.
-	public class Deck : MonoBehaviour {
+    public class Deck : MonoBehaviour {
 
         [SerializeField] protected List<Card> draw;
         [SerializeField] protected List<Card> discard;

@@ -13,36 +13,65 @@
         [SerializeField] protected Deck deck;
         [SerializeField] protected Room room;
         [SerializeField] protected GameSettings gameSettings;
-        [SerializeField] protected GameEvents gameEvents;
 
         protected List<string> playerNames;
-        protected int currentPlayerIdx;
-        protected bool waitingForMove;
-        protected bool isMovingClockwise;
+        protected int currentPlayerIdx = 0;
+        protected bool waitingForMove = false;
+        protected bool isMovingClockwise = true;
         protected int pendingCardsToDraw = 0;
         protected bool isNextPlayerSkipped = false;
         protected bool didPlayerRequestDraw = false;
+        protected bool startingHandsDealt = false;
 
         protected virtual void Start()
         {
-            JoinGame("Tadas", false);
-            JoinGame("Aldona", true);
-            playerNames = room.GetPlayerNames();
-            deck.Reset();
-            DealStartingHands();
-            DrawFirstCard();
-            StartCoroutine(GameLoop());
+            JoinGame("Tadas", false, true);
+            JoinGame("Aldona", true, true);
+
+            StartCoroutine(StartGame());
         }
 
-        protected void DealStartingHands()
+        protected IEnumerator StartGame()
+        {
+            if(room.GetPlayerCount() < 2)
+            {
+                Debug.LogErrorFormat("[GAME] Not enough players to start game.");
+                yield break;
+            }
+
+            playerNames = room.GetPlayerNames();
+            currentPlayerIdx = 0;
+            waitingForMove = false;
+            isMovingClockwise = true;
+            pendingCardsToDraw = 0;
+            isNextPlayerSkipped = false;
+            didPlayerRequestDraw = false;
+            startingHandsDealt = false;
+            
+            deck.Reset();
+
+            StartCoroutine(DealStartingHands());
+
+            yield return new WaitUntil(() => startingHandsDealt);
+
+            StartCoroutine(GameLoop());
+
+            yield return null;
+        }
+
+        protected IEnumerator DealStartingHands()
         {
             for (int i = 0; i < gameSettings.drawGameStartCardCount; i++)
             {
                 foreach (string player in room.GetPlayerNames())
                 {
                     room.GivePlayerCards(player, deck.Draw(1));
+                    yield return new WaitForSeconds(gameSettings.cardDealDelay);
                 }
             }
+            DrawFirstCard();
+            startingHandsDealt = true;
+            yield return null;
         }
 
         protected void DrawFirstCard()
@@ -55,16 +84,10 @@
         protected IEnumerator GameLoop()
         {
             Debug.Log("[GAME] Game loop started.");
-            
-            if(room.GetPlayerCount() < 2)
-            {
-                Debug.LogErrorFormat("[GAME] Not enough players to start game.");
-                yield break;
-            }
 
             while(true)
             {
-                // Debug.LogFormat("[GAME] Player {0} turn. ({1} Cards.)", players[currPlayerIdx].name, players[currPlayerIdx].hand.Count);
+                // Debug.LogFormat("[GAME] Player {0} turn. ({1} Cards.)", GetCurrentPlayerName(), room.GetPlayerCardCount(GetCurrentPlayerName()));
                 // Debug.LogFormat("[GAME] Current Card: {0}", GetCurrentCard());
 
                 // Reset single draw request
@@ -210,10 +233,6 @@
             }
             cards.RemoveAt(0);
             deck.Discard(cards);
-            foreach(Card c in cards)
-            {
-                gameEvents.DiscardCard(playerName, c);
-            }
             room.RemovePlayerCards(playerName, cards);
             return true;
         }
@@ -274,10 +293,14 @@
             return playerNames[currentPlayerIdx];
         }
 
-        public void JoinGame(string playerName, bool isAI) 
+        public void JoinGame(string playerName, bool isAI, bool isLocal) 
         {
-            room.Join(playerName, this, isAI);
-            gameEvents.PlayerJoin(name);
+            room.Join(playerName, this, isAI, isLocal);
+        }
+
+        public float GetTimePerTurn()
+        {
+            return gameSettings.timePerTurn;
         }
     }
 }
