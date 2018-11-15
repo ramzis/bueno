@@ -12,7 +12,7 @@
         [SerializeField] protected List<IPlayer> players;
         [SerializeField] protected List<PlayerView> views;
         public RoomEvents roomEvents;
-
+        
         private void OnValidate()
         {
             Debug.AssertFormat(roomEvents != null, "Missing RoomEvents @ {0}", this);	
@@ -54,6 +54,10 @@
                     }
                 }
             }
+            else 
+            {
+                Debug.LogErrorFormat("[ROOM] Unable to give Player {0} cards", playerName);
+            }
         }
 
         public void GivePlayerCards(string playerName, Card card)
@@ -72,6 +76,10 @@
                     roomEvents.PlayerAnonDraw(playerName);
                 }
             }
+            else 
+            {
+                Debug.LogErrorFormat("[ROOM] Unable to give Player {0} cards", playerName);
+            }
         }
 
         public List<string> GetPlayerNames() 
@@ -88,6 +96,7 @@
             }
             else
             {
+                Debug.LogErrorFormat("[ROOM] Unable to retrieve Player {0} card count", playerName);
                 return -1;
             }
         }
@@ -100,6 +109,7 @@
             }
             else 
             {
+                Debug.LogErrorFormat("[ROOM] Unable to check if Player {0} has cards", playerName);
                 return false;
             }
         }
@@ -115,6 +125,18 @@
                     roomEvents.PlayerDiscardCard(playerName, c);
                 }
             }
+            else 
+            {
+                Debug.LogErrorFormat("[ROOM] Unable to remove Player {0} cards", playerName);
+            }
+        }
+
+        public void DiscardFromDeck(List<Card> cards)
+        {
+            foreach(Card card in cards)
+            {
+                roomEvents.DeckDiscardCard(card);
+            }
         }
 
         public void NotifyPlayerTurn(string playerName)
@@ -124,6 +146,10 @@
             {
                 //Debug.LogFormat("Notified {0} of turn through room", playerName);
                 player.NotifyTurn();
+            }
+            else 
+            {
+                Debug.LogErrorFormat("[ROOM] Unable to notify Player {0} of turn", playerName);
             }
             if(!player.isAI)
             {
@@ -142,6 +168,10 @@
             if(player != null)
             {
 
+            }
+            else 
+            {
+                Debug.LogErrorFormat("[ROOM] Unable to notify Player {0} of turn end", playerName);
             }
             PlayerView view = GetPlayerView(playerName);
             if(view != null)

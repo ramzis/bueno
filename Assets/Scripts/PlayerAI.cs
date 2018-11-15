@@ -22,7 +22,7 @@
             if (move.Count > 0)
             {
                 if (hand.Count - move.Count == 1) SayUno();
-                Debug.LogFormat("[{0}] Playing {1}.", playerName, move[0]);
+                // Debug.LogFormat("[{0}] Playing {1}.", playerName, move[0]);
                 game.MakeMove(playerName, move);
             }
             else
@@ -33,12 +33,12 @@
                     move.Clear();
                     move.Add(hand.Last());
                     if (hand.Count - move.Count == 1) SayUno();
-                    Debug.LogFormat("[{0}] Playing {1}.", playerName, move[0]);
+                    // Debug.LogFormat("[{0}] Playing {1}.", playerName, move[0]);
                     game.MakeMove(playerName, move);
                 }
                 else
                 {
-                    Debug.LogFormat("[{0}] No move to make.", playerName);
+                    // Debug.LogFormat("[{0}] No move to make.", playerName);
                     game.MakeMove(playerName, move);
                 }
             }

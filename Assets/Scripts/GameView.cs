@@ -24,8 +24,6 @@
 
         public static void PlayerDiscardCardEventHandler(string playerName, Card card)
         {
-            // Debug.LogFormat("[GAME VIEW] PlayerDiscardCardEventHandler()");
-
             int val;
             if(handCount.TryGetValue(playerName, out val))
             {
@@ -42,8 +40,6 @@
 
         public static void PlayerDrawCardEventHandler(string playerName, Card card)
         {
-            // Debug.LogFormat("[GAME VIEW] PlayerDrawCardEventHandler()");
-
             int val;
             if(handCount.TryGetValue(playerName, out val))
             {
@@ -59,8 +55,6 @@
 
         public static void PlayerAnonDrawEventHandler(string playerName)
         {
-            // Debug.LogFormat("[GAME VIEW] PlayerAnonDrawEventHandler()");
-
             int val;
             if(handCount.TryGetValue(playerName, out val))
             {
@@ -74,8 +68,6 @@
 
         public static void PlayerJoinEventHandler(string playerName) 
         {
-            // Debug.LogFormat("[GAME VIEW] PlayerJoinEventHandler()");
-
             int val;
             if(handCount.TryGetValue(playerName, out val))
             {
@@ -86,6 +78,11 @@
             {
                 handCount.Add(playerName, 0);
             }
+        }
+
+        public static void DeckDiscardCardEventHandler(Card card)
+        {
+            discard.Add(card);
         }
 
         private void Update() 

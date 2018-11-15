@@ -79,6 +79,7 @@
             List<Card> first = deck.Draw(1);
             ResolveMoveEffects(first);
             deck.Discard(first);
+            room.DiscardFromDeck(first);
         }
 
         protected IEnumerator GameLoop()
@@ -87,7 +88,7 @@
 
             while(true)
             {
-                // Debug.LogFormat("[GAME] Player {0} turn. ({1} Cards.)", GetCurrentPlayerName(), room.GetPlayerCardCount(GetCurrentPlayerName()));
+                Debug.LogFormat("[GAME] Player {0} turn. ({1} Cards.)", GetCurrentPlayerName(), room.GetPlayerCardCount(GetCurrentPlayerName()));
                 // Debug.LogFormat("[GAME] Current Card: {0}", GetCurrentCard());
 
                 // Reset single draw request
@@ -96,7 +97,7 @@
                 // Draw pending cards
                 if (pendingCardsToDraw > 0)
                 {
-                    // Debug.LogFormat("[GAME] Player {0} drawing {1} pending cards.", players[currPlayerIdx].name, pendingCardsToDraw);
+                    Debug.LogFormat("[GAME] Player {0} drawing {1} pending cards.", GetCurrentPlayerName(), pendingCardsToDraw);
                     room.GivePlayerCards(GetCurrentPlayerName(), deck.Draw(pendingCardsToDraw));
                     pendingCardsToDraw = 0;
                 }
@@ -120,8 +121,7 @@
                         Debug.LogFormat("[GAME] Player {0} wins!", GetCurrentPlayerName());
                         yield break;
                     }
-
-                    // Debug.LogFormat("[GAME] Player {0} turn ended.", GetCurrentPlayer().name);
+                    Debug.LogFormat("[GAME] Player {0} turn ended. ({1} Cards.)", GetCurrentPlayerName(), room.GetPlayerCardCount(GetCurrentPlayerName()));
                 }
 
                 // Move to next player.
@@ -234,6 +234,8 @@
             cards.RemoveAt(0);
             deck.Discard(cards);
             room.RemovePlayerCards(playerName, cards);
+            var cs = string.Join(", ", cards.ConvertAll(x => x.ToString()).ToArray());
+            Debug.LogFormat("--Player {0} played: {1}", playerName, cs);
             return true;
         }
 
@@ -248,15 +250,26 @@
             }
 
             waitingForMove = false;
-            if(AttemptMove(playerName, cards))
+
+            if(cards != null && cards.Count > 0)
             {
-                ResolveMoveEffects(cards);
+                if(AttemptMove(playerName, cards))
+                {
+                    ResolveMoveEffects(cards);
+                }
+                else 
+                {
+                    Debug.LogWarningFormat("[GAME] Player {0} provided invalid move.", playerName);
+                    // Draw after invalid or empty move if player hasn't already done that.
+                    if(!didPlayerRequestDraw)
+                        RequestDraw(playerName);
+                }
             }
-            else 
+            else
             {
-                Debug.LogWarningFormat("[GAME] Player {0} provided invalid or empty move.", playerName);
-                // If move was invalid but player already drew, don't draw again
-                if(!didPlayerRequestDraw) 
+                Debug.LogFormat("[GAME] Player {0} provided empty move.", playerName);
+                // Draw after invalid or empty move if player hasn't already done that.
+                if(!didPlayerRequestDraw)
                     RequestDraw(playerName);
             }
         }
@@ -265,12 +278,26 @@
         {
             if(GetCurrentPlayerName() == playerName && !didPlayerRequestDraw)
             {
-                Debug.LogFormat("[GAME] Player {0} drawing 1 card.", playerName);
+                Debug.LogFormat("[GAME] Player {0} requested draw.", playerName);
                 didPlayerRequestDraw = true;
                 room.GivePlayerCards(playerName, deck.Draw(1));
             }
             else
+            {
                 Debug.LogWarningFormat("[GAME] Invalid draw request from player {0}", playerName);
+            }
+        }
+
+        public void SayUno(string playerName)
+        {
+            if (!waitingForMove)
+            {
+                Debug.LogWarningFormat("[GAME] Unexpected Player {0} UNO.", playerName);
+            }
+            else 
+            {
+                Debug.LogFormat("[GAME] Player {0} says UNO!", playerName);
+            }
         }
 
         public bool ValidateMove(Card bot, Card top)

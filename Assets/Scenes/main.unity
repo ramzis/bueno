@@ -1339,6 +1339,7 @@ GameObject:
   - component: {fileID: 1414216863}
   - component: {fileID: 1414216864}
   - component: {fileID: 1414216865}
+  - component: {fileID: 1414216866}
   m_Layer: 0
   m_Name: Game
   m_TagString: Untagged
@@ -1532,6 +1533,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   handStatus: {fileID: 1624916155}
   currentCard: {fileID: 2087429379}
+--- !u!114 &1414216866
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1414216859}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de364d352202043429b3c8ed246f9a22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  roomEvents: {fileID: 0}
+  aDrawCount: 0
+  aDiscardCount: 0
+  tDrawCount: 0
+  tDiscardCount: 0
 --- !u!114 &1439286532
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -99,7 +99,10 @@
 
         public void RemoveCards(List<Card> cards)
         {
-            hand.RemoveAll(x => cards.Contains(x));
+            foreach(Card c in cards)
+            {
+                hand.Remove(c);
+            }
         }
 
         public int GetCardCount()
@@ -109,7 +112,7 @@
 
         public void SayUno()
         {
-            Debug.LogFormat("[{0}] UNO!", playerName);
+            game.SayUno(playerName);
         }
     }
 }
