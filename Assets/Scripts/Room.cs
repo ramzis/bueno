@@ -22,7 +22,13 @@
         {
             if(players == null)
                 players = new List<IPlayer>();
-            AddPlayer(playerName, game, isAI, isLocal);
+            IPlayer player = AddPlayer(playerName, game, isAI, isLocal);
+            if(!isAI && isLocal) 
+            {
+                PlayerView playerView = AddView(playerName, game);
+                ((PlayerHuman) player).SetView(playerView);
+                playerView.DisableView();
+            }
             roomEvents.PlayerJoin(playerName);
             Debug.LogFormat("[ROOM] Player {0} joined", playerName);
         }
@@ -144,21 +150,32 @@
             IPlayer player = GetPlayer(playerName);
             if(player != null)
             {
-                //Debug.LogFormat("Notified {0} of turn through room", playerName);
-                player.NotifyTurn();
+                // Debug.LogFormat("Notified {0} of turn through room", playerName);
+                if(player.isLocal)
+                {
+                    if(!player.isAI)
+                    {
+                        PlayerView playerView = GetPlayerView(playerName);
+                        if(playerView != null)
+                        {
+                            playerView.EnableView();
+                        }
+                        else
+                        {
+                            Debug.LogErrorFormat("[ROOM] Player {0} view not found", playerName);
+                        }
+                    }
+                    player.NotifyTurn();
+                }
+                else
+                {
+                    // TODO: remote player
+                    // remote.NotifyTurn(playerName)
+                }
             }
             else 
             {
                 Debug.LogErrorFormat("[ROOM] Unable to notify Player {0} of turn", playerName);
-            }
-            if(!player.isAI)
-            {
-                PlayerView view = GetPlayerView(playerName);
-                
-                if(view != null)
-                {
-                    view.EnableView();
-                }
             }
         }
 
@@ -167,17 +184,33 @@
             IPlayer player = GetPlayer(playerName);
             if(player != null)
             {
-
+                // Debug.LogFormat("Notified {0} of turn end through room", playerName);
+                if(player.isLocal)
+                {
+                    if(!player.isAI)
+                    {
+                        PlayerView playerView = GetPlayerView(playerName);
+                        if(playerView != null)
+                        {
+                            playerView.DisableView();
+                        }
+                        else
+                        {
+                            Debug.LogErrorFormat("[ROOM] Player {0} view not found", playerName);
+                        }
+                    }
+                }
+                else
+                {
+                    // TODO: remote player
+                    // remote.NotifyTurn(playerName)
+                }
             }
             else 
             {
                 Debug.LogErrorFormat("[ROOM] Unable to notify Player {0} of turn end", playerName);
             }
-            PlayerView view = GetPlayerView(playerName);
-            if(view != null)
-            {
-                view.DisableView();
-            }
+            
         }
 
         protected IPlayer GetPlayer(string playerName)
@@ -190,14 +223,18 @@
             return views.Find(x => x.playerName == playerName);
         }
 
-        protected void AddPlayer(string playerName, Game game, bool isAI, bool isLocal)
+        protected IPlayer AddPlayer(string playerName, Game game, bool isAI, bool isLocal)
         {
-            players.Add(IPlayer.Create(playerName, game, isAI, isLocal));
+            IPlayer player = IPlayer.Create(playerName, game, isAI, isLocal);
+            players.Add(player);
+            return player;
         }
 
-        protected void AddView(string playerName, Game game)
+        protected PlayerView AddView(string playerName, Game game)
         {
-            views.Add(PlayerView.Create(playerName, game.GetTimePerTurn()));
+            PlayerView playerView = PlayerView.Create(playerName, game.GetTimePerTurn()); 
+            views.Add(playerView);
+            return playerView;
         }
 
         protected void RemovePlayer(string playerName) 

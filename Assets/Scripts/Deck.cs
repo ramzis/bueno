@@ -207,7 +207,7 @@
         {
             if(discard.Count < 1)
             {
-                Debug.Log("No current card as discard pile is empty.");
+                Debug.LogError("No current card as discard pile is empty.");
                 return null;
             }
 

@@ -9,9 +9,8 @@
     public class PlayerView : MonoBehaviour {
 
         public string playerName { get; private set; }
-        [SerializeField] private GameObject mainWindow;
-        [SerializeField] private Button bDraw;
-        [SerializeField] private List<Card> hand;
+        public GameObject mainWindow;
+        public Button bDraw;
         private float timePerTurn;
         private Coroutine coroutineView;
         
@@ -25,8 +24,7 @@
         {
             this.playerName = playerName;
             this.timePerTurn = timePerTurn;
-            this.mainWindow = GameObject.Find("Canvas").gameObject;
-            this.hand = new List<Card>();
+            this.mainWindow = GameObject.Find("Panel").gameObject;
 
             return this;
         }
@@ -61,29 +59,6 @@
             if(mainWindow)
             {
                 mainWindow.SetActive(state);
-            }
-        }
-
-        public void GiveCard(Card card)
-        {
-            hand.Add(card);
-        }
-
-        public void RemoveCard(Card card)
-        {
-            hand.Remove(card);
-        }
-
-        public void AddCard()
-        {
-            hand.Add(Card.Create(Card.Type._, Card.Color._));
-        }
-
-        public void RemoveCard()
-        {
-            if(hand.Count > 0)
-            {
-                hand.Remove(hand.Last());
             }
         }
     }

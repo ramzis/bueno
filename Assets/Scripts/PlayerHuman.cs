@@ -8,11 +8,16 @@
 
     public class PlayerHuman : IPlayer {
 
+        public void SetView(PlayerView playerView)
+        {
+            this.playerView = playerView;
+        }
+
         public override void MakeMove()
         {
             //List<Card> move = new List<Card>();
             //game.MakeMove(playerName, move);
-            MakeRandomMove(hand);
+            //MakeRandomMove(hand);
         }
 
         public void DrawButton()

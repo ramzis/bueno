@@ -27,6 +27,12 @@
         {
             JoinGame("Tadas", false, true);
             JoinGame("Aldona", true, true);
+            JoinGame("D.A.D.", true, true);
+            JoinGame("Yugi", true, true);
+            JoinGame("Kaiba", true, true);
+            JoinGame("Madelyn", true, true);
+            JoinGame("Arthur", true, true);
+            JoinGame("Percy", true, true);
 
             StartCoroutine(StartGame());
         }
@@ -121,6 +127,8 @@
                         Debug.LogFormat("[GAME] Player {0} wins!", GetCurrentPlayerName());
                         yield break;
                     }
+                    // Notify player of turn end.
+                    room.NotifyTurnEnded(GetCurrentPlayerName());
                     Debug.LogFormat("[GAME] Player {0} turn ended. ({1} Cards.)", GetCurrentPlayerName(), room.GetPlayerCardCount(GetCurrentPlayerName()));
                 }
 

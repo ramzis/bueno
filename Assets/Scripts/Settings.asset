@@ -11,9 +11,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 452cd48d092ecf942a2e43823b14eaeb, type: 3}
   m_Name: Settings
   m_EditorClassIdentifier: 
-  drawGameStartCardCount: 50
+  drawGameStartCardCount: 7
   drawWildCardCount: 4
   drawPlusTwoCardCount: 2
   timePerTurn: 1
-  afterTurnDelay: 0
+  afterTurnDelay: 1
   cardDealDelay: 0

@@ -20,6 +20,17 @@
             hand = new List<Card>();
             handCount = new Dictionary<string, int>();
             discard = new List<Card>();
+            SubscribeToRoomEvents();
+        }
+
+        private void SubscribeToRoomEvents()
+        {
+            RoomEvents roomEvents = GetComponent<RoomEvents>();
+            roomEvents.PlayerDiscardCardEvent += PlayerDiscardCardEventHandler;
+            roomEvents.PlayerDrawCardEvent += PlayerDrawCardEventHandler;
+            roomEvents.PlayerAnonDrawEvent += PlayerAnonDrawEventHandler;
+            roomEvents.PlayerJoinEvent += PlayerJoinEventHandler;
+            roomEvents.DeckDiscardCardEvent += DeckDiscardCardEventHandler;
         }
 
         public static void PlayerDiscardCardEventHandler(string playerName, Card card)
@@ -35,7 +46,6 @@
             }
 
             discard.Add(card);
-            //hand.Remove(card);
         }
 
         public static void PlayerDrawCardEventHandler(string playerName, Card card)
