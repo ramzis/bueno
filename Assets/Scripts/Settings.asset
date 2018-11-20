@@ -15,5 +15,5 @@ MonoBehaviour:
   drawWildCardCount: 4
   drawPlusTwoCardCount: 2
   timePerTurn: 1
-  afterTurnDelay: 1
+  afterTurnDelay: 0
   cardDealDelay: 0

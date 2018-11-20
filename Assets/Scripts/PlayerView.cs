@@ -10,9 +10,11 @@
 
         public string playerName { get; private set; }
         public GameObject mainWindow;
+        public Text tHand;
         public Button bDraw;
         private float timePerTurn;
         private Coroutine coroutineView;
+        private List<Card> hand;
         
         public static PlayerView Create(string playerName, float timePerTurn)
         {
@@ -25,8 +27,20 @@
             this.playerName = playerName;
             this.timePerTurn = timePerTurn;
             this.mainWindow = GameObject.Find("Panel").gameObject;
+            this.tHand = this.mainWindow.GetComponentInChildren<Text>();
 
             return this;
+        }
+
+        public void UpdateHand(List<Card> hand)
+        {
+            if(this.hand == null)
+            {
+                this.hand = new List<Card>();
+            }
+            this.hand.Clear();
+            this.hand.AddRange(hand);
+            this.tHand.text = string.Join(" | ", this.hand.ConvertAll(x => x.ToString()).ToArray());
         }
 
         public void EnableView()

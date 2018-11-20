@@ -42,6 +42,10 @@
             {
                 return;
             }
+            if(playerView != null)
+            {
+                playerView.UpdateHand(new List<Card>(hand));
+            }
             activeTurn = true;
             MakeMove();
             activeTurn = false;
