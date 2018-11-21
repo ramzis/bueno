@@ -14,55 +14,94 @@
         [SerializeField] protected Room room;
         [SerializeField] protected GameSettings gameSettings;
 
-        protected List<string> playerNames;
-        protected int currentPlayerIdx = 0;
-        protected bool waitingForMove = false;
-        protected bool isMovingClockwise = true;
+        [SerializeField] protected string state;
+        [SerializeField] protected string pendingState;
+        [SerializeField] protected string lastState;
+        [SerializeField] protected bool autoStateChange = true;
+
         protected int pendingCardsToDraw = 0;
         protected bool isNextPlayerSkipped = false;
         protected bool didPlayerRequestDraw = false;
-        protected bool startingHandsDealt = false;
 
-        protected virtual void Start()
+        private void Start()
         {
-            JoinGame("Tadas", false, true);
-            JoinGame("Aldona", true, true);
-            JoinGame("D.A.D.", true, true);
-            JoinGame("Yugi", true, true);
-            JoinGame("Kaiba", true, true);
-            JoinGame("Madelyn", true, true);
-            JoinGame("Arthur", true, true);
-            JoinGame("Percy", true, true);
-
-            StartCoroutine(StartGame());
+            state = "STATE_Null";
+            StartCoroutine(StateMachine());
         }
 
-        protected IEnumerator StartGame()
+        protected IEnumerator StateMachine()
         {
-            if(room.GetPlayerCount() < 2)
+            while(true)
             {
-                Debug.LogErrorFormat("[GAME] Not enough players to start game.");
-                yield break;
+                switch (state)
+                {
+                    case "STATE_NewGame":
+                    {
+                        ChangeState("STATE_InitVars");
+                        break;
+                    }
+                    case "STATE_InitVars":
+                    {
+                        pendingCardsToDraw = 0;
+                        isNextPlayerSkipped = false;
+                        didPlayerRequestDraw = false;
+                        ChangeState("STATE_InitDeck");
+                        break;
+                    }
+                    case "STATE_InitDeck":
+                    {
+                        deck.Reset();
+                        ChangeState("STATE_DealStartingHands");
+                        break;
+                    }
+                    case "STATE_DealStartingHands":
+                    {
+                        StartCoroutine(DealStartingHands());
+                        break;
+                    }
+                    case "STATE_DrawFirstCard":
+                    {
+                        DrawFirstCard();
+                        ChangeState("STATE_StartGame");
+                        break;
+                    }
+                    case "STATE_StartGame":
+                    {
+                        StartCoroutine(GameLoop());
+                        ChangeState("STATE_GameRunning");
+                        break;
+                    }
+                    case "STATE_GameRunning":
+                        break;
+                    case "STATE_GameRunning_WaitingForMove":
+                        break;
+                    case "STATE_GameRunning_MakingMove":
+                        break;
+                    case "STATE_GameRunning_ResolvingMoveEffects":
+                        break;
+                    case "STATE_Null":
+                        break;
+                    default:
+                        Debug.LogFormat("[GAME] Unknown state: {0}", state);
+                        break;
+                }
+                yield return new WaitForEndOfFrame();
             }
+        }
 
-            playerNames = room.GetPlayerNames();
-            currentPlayerIdx = 0;
-            waitingForMove = false;
-            isMovingClockwise = true;
-            pendingCardsToDraw = 0;
-            isNextPlayerSkipped = false;
-            didPlayerRequestDraw = false;
-            startingHandsDealt = false;
-            
-            deck.Reset();
-
-            StartCoroutine(DealStartingHands());
-
-            yield return new WaitUntil(() => startingHandsDealt);
-
-            StartCoroutine(GameLoop());
-
-            yield return null;
+        protected void ChangeState(string state)
+        {
+            lastState = this.state;
+            if (autoStateChange)
+            {
+                this.state = state;
+                pendingState = "";
+            }
+            else
+            {
+                this.state = "STATE_Null";
+                pendingState = state;
+            }
         }
 
         protected IEnumerator DealStartingHands()
@@ -71,12 +110,12 @@
             {
                 foreach (string player in room.GetPlayerNames())
                 {
-                    room.GivePlayerCards(player, deck.Draw(1));
+                    //room.GivePlayerCards(player, deck.Draw(1));
+                    room.GiveCurrentPlayerCards(deck.Draw(1));
                     yield return new WaitForSeconds(gameSettings.cardDealDelay);
                 }
             }
-            DrawFirstCard();
-            startingHandsDealt = true;
+            ChangeState("STATE_DrawFirstCard");
             yield return null;
         }
 
@@ -94,7 +133,7 @@
 
             while(true)
             {
-                Debug.LogFormat("[GAME] Player {0} turn. ({1} Cards.)", GetCurrentPlayerName(), room.GetPlayerCardCount(GetCurrentPlayerName()));
+                //Debug.LogFormat("[GAME] Player {0} turn. ({1} Cards.)", GetCurrentPlayerName(), room.GetPlayerCardCount(GetCurrentPlayerName()));
                 // Debug.LogFormat("[GAME] Current Card: {0}", GetCurrentCard());
 
                 // Reset single draw request
@@ -103,44 +142,38 @@
                 // Draw pending cards
                 if (pendingCardsToDraw > 0)
                 {
-                    Debug.LogFormat("[GAME] Player {0} drawing {1} pending cards.", GetCurrentPlayerName(), pendingCardsToDraw);
-                    room.GivePlayerCards(GetCurrentPlayerName(), deck.Draw(pendingCardsToDraw));
+                    //Debug.LogFormat("[GAME] Player {0} drawing {1} pending cards.", GetCurrentPlayerName(), pendingCardsToDraw);
+                    room.GiveCurrentPlayerCards(deck.Draw(pendingCardsToDraw));
                     pendingCardsToDraw = 0;
                 }
 
                 // Skip turn if necessary
                 if (isNextPlayerSkipped)
                 {
-                    Debug.LogFormat("[GAME] Player {0} turn skipped.", GetCurrentPlayerName());
+                    //Debug.LogFormat("[GAME] Player {0} turn skipped.", GetCurrentPlayerName());
+                    Debug.LogFormat("[GAME] Player {0} turn skipped.", room.GetCurrentPlayerName());
                     isNextPlayerSkipped = false;
                 }
                 else
                 {
                     // Notify player of turn and wait for response.
                     Coroutine c = StartCoroutine(TimeOutMove());
-                    yield return new WaitWhile(() => waitingForMove);
+                    yield return new WaitWhile(() => state == "STATE_GameRunning_WaitingForMove");
                     StopCoroutine(c);
 
+                    room.TurnEnded();
+
                     // Check for win condition.
-                    if(room.GetPlayerCardCount(GetCurrentPlayerName()) == 0)
+                    if(room.GetCurrentPlayerCardCount() == 0)
                     {
-                        Debug.LogFormat("[GAME] Player {0} wins!", GetCurrentPlayerName());
+                        Debug.LogFormat("[GAME] Player {0} wins!", room.GetCurrentPlayerName());
                         yield break;
                     }
-                    // Notify player of turn end.
-                    room.NotifyTurnEnded(GetCurrentPlayerName());
-                    Debug.LogFormat("[GAME] Player {0} turn ended. ({1} Cards.)", GetCurrentPlayerName(), room.GetPlayerCardCount(GetCurrentPlayerName()));
+                    
                 }
 
                 // Move to next player.
-                if (isMovingClockwise)
-                {
-                    currentPlayerIdx = currentPlayerIdx + 1 < room.GetPlayerCount() ? currentPlayerIdx + 1 : 0;
-                }
-                else
-                {
-                    currentPlayerIdx = currentPlayerIdx - 1 >= 0 ? currentPlayerIdx - 1 : room.GetPlayerCount() - 1;
-                }
+                room.NextPlayer();
 
                 yield return new WaitForSeconds(gameSettings.afterTurnDelay);
                 yield return new WaitForEndOfFrame();
@@ -149,20 +182,23 @@
 
         protected IEnumerator TimeOutMove()
         {
-            var _currPlayer = currentPlayerIdx;
-            waitingForMove = true;
-            room.NotifyPlayerTurn(GetCurrentPlayerName());
-            yield return new WaitForSecondsRealtime(gameSettings.timePerTurn);
+            //var _currPlayer = currentPlayerIdx;
+            //waitingForMove = true;
+            state = "STATE_GameRunning_WaitingForMove";
+            room.TurnStarted();
+            yield return null;
+            /*yield return new WaitForSecondsRealtime(gameSettings.timePerTurn);
             if(currentPlayerIdx == _currPlayer && waitingForMove)
             {
                 Debug.LogFormat("[GAME] Player {0} turn timed out.", GetCurrentPlayerName());
                 waitingForMove = false;
                 RequestDraw(GetCurrentPlayerName());
-            }
+            }*/
         }
 
         protected void ResolveMoveEffects(List<Card> cards) 
         {
+            ChangeState("STATE_GameRunning_ResolvingMoveEffects");
             foreach(Card c in cards)
             {
                 switch (c.type)
@@ -191,8 +227,8 @@
                         isNextPlayerSkipped = true;
                         break;
                     case Card.Type._Reverse:
-                        if(room.GetPlayerCount() > 2)
-                            isMovingClockwise = !isMovingClockwise;
+                        if (room.GetPlayerCount() > 2)
+                            room.ReverseDirectionOfPlay();
                         else
                             isNextPlayerSkipped = true;
                         break;
@@ -212,11 +248,12 @@
 
         protected bool AttemptMove(string playerName, List<Card> cards)
         {
+            // TODO: move this to room
             // Ensure player has these cards
-            if(!room.CheckIfPlayerHasCards(playerName, cards) || cards.Count < 1) 
-            {
-                return false;
-            }
+            //if(!room.CheckIfPlayerHasCards(playerName, cards) || cards.Count < 1) 
+            //{
+            //    return false;
+            //}
 
             cards.Insert(0, GetCurrentCard());
             for (int i = 0; i < cards.Count - 1; i++)
@@ -241,7 +278,7 @@
             }
             cards.RemoveAt(0);
             deck.Discard(cards);
-            room.RemovePlayerCards(playerName, cards);
+            room.RemoveCurrentPlayerCards(cards);
             var cs = string.Join(", ", cards.ConvertAll(x => x.ToString()).ToArray());
             Debug.LogFormat("--Player {0} played: {1}", playerName, cs);
             return true;
@@ -251,15 +288,19 @@
 
         public void MakeMove(string playerName, List<Card> cards)
         {
+            /* TODO: move to room
             if (!waitingForMove)
             {
                 Debug.LogWarningFormat("[GAME] Unexpected Player {0} move.", playerName);
                 return;
             }
+            */
 
-            waitingForMove = false;
+            // waitingForMove = false;
 
-            if(cards != null && cards.Count > 0)
+            ChangeState("STATE_GameRunning_MakingMove");
+
+            if (cards != null && cards.Count > 0)
             {
                 if(AttemptMove(playerName, cards))
                 {
@@ -284,11 +325,12 @@
 
         public void RequestDraw(string playerName)
         {
-            if(GetCurrentPlayerName() == playerName && !didPlayerRequestDraw)
+            /*if(GetCurrentPlayerName() == playerName && */ // TODO: Move to room
+            if(!didPlayerRequestDraw)
             {
                 Debug.LogFormat("[GAME] Player {0} requested draw.", playerName);
                 didPlayerRequestDraw = true;
-                room.GivePlayerCards(playerName, deck.Draw(1));
+                room.GiveCurrentPlayerCards(deck.Draw(1));
             }
             else
             {
@@ -298,7 +340,7 @@
 
         public void SayUno(string playerName)
         {
-            if (!waitingForMove)
+            if (state != "STATE_GameRunning_WaitingForMove")
             {
                 Debug.LogWarningFormat("[GAME] Unexpected Player {0} UNO.", playerName);
             }
@@ -323,19 +365,21 @@
             return deck.GetCurrentCard();
         }
 
-        public string GetCurrentPlayerName()
-        {
-            return playerNames[currentPlayerIdx];
-        }
-
-        public void JoinGame(string playerName, bool isAI, bool isLocal) 
-        {
-            room.Join(playerName, this, isAI, isLocal);
-        }
-
         public float GetTimePerTurn()
         {
             return gameSettings.timePerTurn;
+        }
+
+        public void Play()
+        {
+            if(state == "STATE_Null")
+            {
+                ChangeState("STATE_NewGame");
+            }
+            else
+            {
+                Debug.LogFormat("[GAME] Can't start game from state {0}.", state);
+            }
         }
     }
 }

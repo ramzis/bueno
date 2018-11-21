@@ -11,37 +11,26 @@
         
         [SerializeField] protected List<IPlayer> players;
         [SerializeField] protected List<PlayerView> views;
+        [SerializeField] protected Game game; // TODO make interface
         public RoomEvents roomEvents;
+
+        private IPlayer currentPlayer;
+        private bool isMovingClockwise;
+        private bool waitingForMove = false;
+        private int currentPlayerIdx = 0;
+
+        private void Start()
+        {
+
+        }
         
         private void OnValidate()
         {
             Debug.AssertFormat(roomEvents != null, "Missing RoomEvents @ {0}", this);	
         }
 
-        public void Join(string playerName, Game game, bool isAI, bool isLocal)
-        {
-            if(players == null)
-                players = new List<IPlayer>();
-            IPlayer player = AddPlayer(playerName, game, isAI, isLocal);
-            if(!isAI && isLocal) 
-            {
-                PlayerView playerView = AddView(playerName, game);
-                ((PlayerHuman) player).SetView(playerView);
-                playerView.DisableView();
-            }
-            roomEvents.PlayerJoin(playerName);
-            Debug.LogFormat("[ROOM] Player {0} joined", playerName);
-        }
 
-        public int GetPlayerCount()
-        {
-            if(players != null)
-                return players.Count;
-            else
-                return 0;
-        }
-
-        public void GivePlayerCards(string playerName, List<Card> cards)
+        protected void GivePlayerCards(string playerName, List<Card> cards)
         {
             IPlayer player = GetPlayer(playerName);
             if(player != null) 
@@ -66,7 +55,7 @@
             }
         }
 
-        public void GivePlayerCards(string playerName, Card card)
+        protected void GivePlayerCards(string playerName, Card card)
         {
             IPlayer player = GetPlayer(playerName);
             if(player != null) 
@@ -88,12 +77,7 @@
             }
         }
 
-        public List<string> GetPlayerNames() 
-        {
-            return players.ConvertAll(x => x.playerName);
-        }
-
-        public int GetPlayerCardCount(string playerName)
+        private int GetPlayerCardCount(string playerName)
         {
             IPlayer player = GetPlayer(playerName);
             if(player != null)
@@ -107,7 +91,7 @@
             }
         }
 
-        public bool CheckIfPlayerHasCards(string playerName, List<Card> cards) 
+        private bool CheckIfPlayerHasCards(string playerName, List<Card> cards) 
         {
             IPlayer player = GetPlayer(playerName);
             if(player != null) {
@@ -120,7 +104,7 @@
             }
         }
 
-        public void RemovePlayerCards(string playerName, List<Card> cards)
+        private void RemovePlayerCards(string playerName, List<Card> cards)
         {
             IPlayer player = GetPlayer(playerName);
             if(player != null) 
@@ -137,15 +121,9 @@
             }
         }
 
-        public void DiscardFromDeck(List<Card> cards)
-        {
-            foreach(Card card in cards)
-            {
-                roomEvents.DeckDiscardCard(card);
-            }
-        }
 
-        public void NotifyPlayerTurn(string playerName)
+
+        private void NotifyPlayerTurn(string playerName)
         {
             IPlayer player = GetPlayer(playerName);
             if(player != null)
@@ -179,7 +157,7 @@
             }
         }
 
-        public void NotifyTurnEnded(string playerName)
+        private void NotifyTurnEnded(string playerName)
         {
             IPlayer player = GetPlayer(playerName);
             if(player != null)
@@ -213,6 +191,8 @@
             
         }
 
+
+
         protected IPlayer GetPlayer(string playerName)
         {
             return players.Find(x => x.playerName == playerName);
@@ -237,9 +217,121 @@
             return playerView;
         }
 
-        protected void RemovePlayer(string playerName) 
+
+        // Public API
+
+        public bool Play()
+        {
+            if (GetPlayerCount() >= 2)
+            {
+                game.Play();
+                return true;
+            }
+            else
+            {
+                Debug.LogWarningFormat("[ROOM] Not enough players to start game.");
+                return false;
+            }
+        }
+
+        public void Join(string playerName, bool isAI, bool isLocal)
+        {
+            if (players == null)
+                players = new List<IPlayer>();
+            IPlayer player = AddPlayer(playerName, null, isAI, isLocal); //TODO fix game ref in player to be room ref
+            if (!isAI && isLocal)
+            {
+                PlayerView playerView = AddView(playerName, null); // fix same
+                ((PlayerHuman)player).SetView(playerView);
+                playerView.DisableView();
+            }
+            roomEvents.PlayerJoin(playerName);
+            Debug.LogFormat("[ROOM] Player {0} joined", playerName);
+        }
+
+        public void RemovePlayer(string playerName) 
         {
             throw new System.NotImplementedException();
         }
+
+        public void NextPlayer()
+        {
+            if (isMovingClockwise)
+            {
+                currentPlayerIdx = currentPlayerIdx + 1 < GetPlayerCount() ? currentPlayerIdx + 1 : 0;
+            }
+            else
+            {
+                currentPlayerIdx = currentPlayerIdx - 1 >= 0 ? currentPlayerIdx - 1 : GetPlayerCount() - 1;
+            }
+
+            //Debug.LogFormat("[GAME] Player {0} turn ended. ({1} Cards.)", GetCurrentPlayerName(), room.GetPlayerCardCount(GetCurrentPlayerName()));
+        }
+
+        public void TurnStarted()
+        {
+            NotifyPlayerTurn(currentPlayer.playerName);
+        }
+
+        public void TurnEnded()
+        {
+            NotifyTurnEnded(currentPlayer.playerName);
+        }
+
+        public void ReverseDirectionOfPlay()
+        {
+            isMovingClockwise = !isMovingClockwise;
+        }
+
+        public int GetPlayerCount()
+        {
+            if (players != null)
+                return players.Count;
+            else
+                return 0;
+        }
+
+        public string GetCurrentPlayerName()
+        {
+            return currentPlayer.playerName;
+        }
+
+        public List<string> GetPlayerNames()
+        {
+            return players.ConvertAll(x => x.playerName);
+        }
+
+
+        // Card specific
+
+        public int GetCurrentPlayerCardCount()
+        {
+            return GetPlayerCardCount(currentPlayer.playerName);
+        }
+
+        public void GiveCurrentPlayerCards(List<Card> cards)
+        {
+            GivePlayerCards(currentPlayer.playerName, cards);
+        }
+
+        public void RemoveCurrentPlayerCards(List<Card> cards)
+        {
+            RemovePlayerCards(currentPlayer.playerName, cards);
+        }
+
+        public void GiveCurrentPlayerCards(Card cards)
+        {
+            GivePlayerCards(currentPlayer.playerName, cards);
+        }
+
+        public void DiscardFromDeck(List<Card> cards)
+        {
+            foreach (Card card in cards)
+            {
+                roomEvents.DeckDiscardCard(card);
+            }
+        }
+
+
     }
 }

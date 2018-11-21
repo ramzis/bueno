@@ -27,10 +27,10 @@
         public void PlayersJoinGame()
         {
             Debug.Assert(players == null);
-            Join("Aldona", null, true, true);
+            Join("Aldona", true, true);
             Debug.Assert(players.Count == 1);
             Debug.Assert(players.Exists(p => p.playerName == "Aldona"));
-            Join("Tadas", null, true, true);
+            Join("Tadas", true, true);
             Debug.Assert(players.Count == 2);
             Debug.Assert(players.Exists(p => p.playerName == "Tadas"));
         }
@@ -39,16 +39,16 @@
         public void PlayersAreCountedCorrectly()
         {
             Debug.Assert(GetPlayerCount() == 0);
-            Join("Aldona", null, true, true);
+            Join("Aldona", true, true);
             Debug.Assert(GetPlayerCount() == 1);
-            Join("Tadas", null, true, true);
+            Join("Tadas", true, true);
             Debug.Assert(GetPlayerCount() == 2);
         }
 
         [Test]
         public void PlayersAreGivenOneCard()
         {
-            Join("Aldona", null, true, true);
+            Join("Aldona", true, true);
             IPlayer a = GetPlayer("Aldona");
             Debug.Assert(a.GetCardCount() == 0);
 
