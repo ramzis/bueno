@@ -13,11 +13,7 @@
         [SerializeField] protected Deck deck;
         [SerializeField] protected Room room;
         [SerializeField] protected GameSettings gameSettings;
-
-        [SerializeField] protected string state;
-        [SerializeField] protected string pendingState;
-        [SerializeField] protected string lastState;
-        [SerializeField] protected bool autoStateChange = true;
+        [SerializeField] protected StateMachine state;
 
         protected int pendingCardsToDraw = 0;
         protected bool isNextPlayerSkipped = false;
@@ -25,7 +21,7 @@
 
         private void Start()
         {
-            state = "STATE_Null";
+            state.Set("STATE_Null");
             StartCoroutine(StateMachine());
         }
 
@@ -33,11 +29,11 @@
         {
             while(true)
             {
-                switch (state)
+                switch (state.Get())
                 {
                     case "STATE_NewGame":
                     {
-                        ChangeState("STATE_InitVars");
+                        state.Set("STATE_InitVars");
                         break;
                     }
                     case "STATE_InitVars":
@@ -45,13 +41,13 @@
                         pendingCardsToDraw = 0;
                         isNextPlayerSkipped = false;
                         didPlayerRequestDraw = false;
-                        ChangeState("STATE_InitDeck");
+                        state.Set("STATE_InitDeck");
                         break;
                     }
                     case "STATE_InitDeck":
                     {
                         deck.Reset();
-                        ChangeState("STATE_DealStartingHands");
+                        state.Set("STATE_DealStartingHands");
                         break;
                     }
                     case "STATE_DealStartingHands":
@@ -62,13 +58,13 @@
                     case "STATE_DrawFirstCard":
                     {
                         DrawFirstCard();
-                        ChangeState("STATE_StartGame");
+                        state.Set("STATE_StartGame");
                         break;
                     }
                     case "STATE_StartGame":
                     {
                         StartCoroutine(GameLoop());
-                        ChangeState("STATE_GameRunning");
+                        state.Set("STATE_GameRunning");
                         break;
                     }
                     case "STATE_GameRunning":
@@ -89,21 +85,6 @@
             }
         }
 
-        protected void ChangeState(string state)
-        {
-            lastState = this.state;
-            if (autoStateChange)
-            {
-                this.state = state;
-                pendingState = "";
-            }
-            else
-            {
-                this.state = "STATE_Null";
-                pendingState = state;
-            }
-        }
-
         protected IEnumerator DealStartingHands()
         {
             for (int i = 0; i < gameSettings.drawGameStartCardCount; i++)
@@ -115,7 +96,7 @@
                     yield return new WaitForSeconds(gameSettings.cardDealDelay);
                 }
             }
-            ChangeState("STATE_DrawFirstCard");
+            state.Set("STATE_DrawFirstCard");
             yield return null;
         }
 
@@ -158,7 +139,7 @@
                 {
                     // Notify player of turn and wait for response.
                     Coroutine c = StartCoroutine(TimeOutMove());
-                    yield return new WaitWhile(() => state == "STATE_GameRunning_WaitingForMove");
+                    yield return new WaitWhile(() => state.Get() == "STATE_GameRunning_WaitingForMove");
                     StopCoroutine(c);
 
                     room.TurnEnded();
@@ -184,7 +165,7 @@
         {
             //var _currPlayer = currentPlayerIdx;
             //waitingForMove = true;
-            state = "STATE_GameRunning_WaitingForMove";
+            state.Set("STATE_GameRunning_WaitingForMove");
             room.TurnStarted();
             yield return null;
             /*yield return new WaitForSecondsRealtime(gameSettings.timePerTurn);
@@ -198,7 +179,7 @@
 
         protected void ResolveMoveEffects(List<Card> cards) 
         {
-            ChangeState("STATE_GameRunning_ResolvingMoveEffects");
+            state.Set("STATE_GameRunning_ResolvingMoveEffects");
             foreach(Card c in cards)
             {
                 switch (c.type)
@@ -298,7 +279,7 @@
 
             // waitingForMove = false;
 
-            ChangeState("STATE_GameRunning_MakingMove");
+            state.Set("STATE_GameRunning_MakingMove");
 
             if (cards != null && cards.Count > 0)
             {
@@ -340,7 +321,7 @@
 
         public void SayUno(string playerName)
         {
-            if (state != "STATE_GameRunning_WaitingForMove")
+            if (state.Get() != "STATE_GameRunning_WaitingForMove")
             {
                 Debug.LogWarningFormat("[GAME] Unexpected Player {0} UNO.", playerName);
             }
@@ -372,9 +353,9 @@
 
         public void Play()
         {
-            if(state == "STATE_Null")
+            if(state.Get() == "STATE_Null")
             {
-                ChangeState("STATE_NewGame");
+                state.Set("STATE_NewGame");
             }
             else
             {

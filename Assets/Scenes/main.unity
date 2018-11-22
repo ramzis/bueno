@@ -421,10 +421,7 @@ MonoBehaviour:
   deck: {fileID: 1414216862}
   room: {fileID: 1414216863}
   gameSettings: {fileID: 11400000, guid: 430313d6f357a444db858ba3997ee1d9, type: 2}
-  state: 
-  pendingState: 
-  lastState: 
-  autoStateChange: 0
+  state: {fileID: 11400000, guid: d995794f95aec214d89417fe9f168f52, type: 2}
 --- !u!4 &1414216861
 Transform:
   m_ObjectHideFlags: 0

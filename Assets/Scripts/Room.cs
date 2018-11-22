@@ -11,7 +11,7 @@
         
         [SerializeField] protected List<IPlayer> players;
         [SerializeField] protected List<PlayerView> views;
-        [SerializeField] protected Game game; // TODO make interface
+        [SerializeField] protected Game game;
         public RoomEvents roomEvents;
 
         private IPlayer currentPlayer;
